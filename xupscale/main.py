@@ -16,6 +16,36 @@ from .http_server import HttpServer
 from .session import SessionManager
 from .tcp_server import TcpServer
 
+log = logging.getLogger("xupscale.main")
+
+# How many times (and how long apart) to retry a service that fails to
+# start. Covers a real, observed race: closing the app runs the `finally`
+# block below (releases the HTTP/TCP ports, withdraws the mDNS name) before
+# the window actually closes - but that teardown can itself take a few
+# seconds (terminating ffmpeg, unregistering with zeroconf). If the app is
+# then reopened quickly with "Автозапуск сервера" on, gui.py fires start()
+# again 200ms after the window appears, which can land well before that
+# teardown finished elsewhere (a previous run, a crashed process Windows is
+# still cleaning up, etc.) - the port/mDNS name isn't free yet. Giving up on
+# the very first failure turned that harmless timing race into a hard,
+# visible "starts then immediately stops" crash.
+_START_RETRY_ATTEMPTS = 6
+_START_RETRY_DELAY_SECONDS = 1.0
+
+
+async def _start_with_retry(start, name: str) -> None:
+    for attempt in range(1, _START_RETRY_ATTEMPTS + 1):
+        try:
+            await start()
+            return
+        except Exception:
+            if attempt == _START_RETRY_ATTEMPTS:
+                raise
+            log.warning("%s failed to start (attempt %d/%d) - retrying in %.0fs; "
+                        "a just-closed previous instance may still be releasing it",
+                        name, attempt, _START_RETRY_ATTEMPTS, _START_RETRY_DELAY_SECONDS)
+            await asyncio.sleep(_START_RETRY_DELAY_SECONDS)
+
 
 async def run(cfg: Config, stop_event: threading.Event) -> None:
     """Run the node's services until stop_event is set. A plain
@@ -23,7 +53,6 @@ async def run(cfg: Config, stop_event: threading.Event) -> None:
     --headless (set from a signal handler on this thread) and the GUI (set
     from a button click on the Tk thread while this runs in a background
     thread - an asyncio.Event isn't safe to .set() from another thread)."""
-    log = logging.getLogger("xupscale.main")
     log.info("node IP detected as %s", cfg.node_ip)
 
     # SessionManager never resumes a session across process restarts (it
@@ -43,9 +72,9 @@ async def run(cfg: Config, stop_event: threading.Event) -> None:
     tcp_server = TcpServer(cfg, sessions)
     discovery = Discovery(cfg)
 
-    await http_server.start()
-    await tcp_server.start()
-    await discovery.start()
+    await _start_with_retry(http_server.start, "HTTP server")
+    await _start_with_retry(tcp_server.start, "TCP server")
+    await _start_with_retry(discovery.start, "mDNS discovery")
 
     try:
         while not stop_event.is_set():
