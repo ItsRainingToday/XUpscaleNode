@@ -31,28 +31,27 @@ XUpscaleNode встраивается прозрачно: приложение �
 ## Принцип работы
 
 ```mermaid
-flowchart LR
-    subgraph phone["AniLabX (Android, XRemoteClient)"]
-        A[Приложение]
-    end
-    subgraph node["XUpscaleNode (ПК с GPU)"]
-        B[TCP-сервер протокола]
-        C[Апскейл-пайплайн\nffmpeg + GPU-шейдер]
-        D[HTTP-сервер\nHLS-плейлист]
-    end
-    subgraph recv["Приёмник\nXRemoteDesktop или AniLabX + XRemoteServer"]
-        E[Встроенный плеер]
-    end
-    F[(CDN с исходным видео)]
+flowchart TD
+    A["Приложение\n(AniLabX, XRemoteClient)"]
+    E["Приёмник\n(встроенный плеер)"]
+    F[("CDN")]
 
-    B -. "mDNS-анонс: узел виден как cast-таргет" .-> A
-    E -. "mDNS-анонс: настоящий приёмник виден как cast-таргет" .-> A
-    A -- "1. PLAY_VIDEO (ссылка на оригинал)" --> B
-    C -- "2. качает исходник" --> F
-    C -- "3. пишет апскейленные сегменты" --> D
-    B -- "4. переписанный PLAY_VIDEO\n(ссылка на локальный HLS)" --> E
-    E -- "5. запрашивает плейлист/сегменты" --> D
+    subgraph node["XUpscaleNode"]
+        B["TCP-сервер"]
+        C["Апскейл\nffmpeg + GPU-шейдер"]
+        D["HTTP-сервер\n(HLS)"]
+    end
+
+    B -.mDNS.-> A
+    E -.mDNS.-> A
+    A -- "1 PLAY_VIDEO" --> B
+    C -- "2 качает исходник" --> F
+    C -- "3 пишет сегменты" --> D
+    B -- "4 PLAY_VIDEO\nлокальный HLS" --> E
+    E -- "5 качает HLS" --> D
 ```
+
+*Приложение* и *приёмник* — те же, что определены выше.
 
 Узел не заменяет приёмник, а встаёт между приложением и ним:
 
