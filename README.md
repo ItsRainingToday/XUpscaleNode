@@ -33,7 +33,7 @@ XUpscaleNode встраивается прозрачно: приложение �
 ```mermaid
 flowchart TD
     A["Приложение\n(AniLabX, XRemoteClient)"]
-    E["Приёмник c XRemoteServer\n(встроенный или внешний плеер)"]
+    E["Приёмник c XRemoteServer\n(встроенный или внешний\nплеер)"]
     F[("CDN")]
 
     subgraph node["XUpscaleNode"]
