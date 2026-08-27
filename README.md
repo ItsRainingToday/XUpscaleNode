@@ -32,7 +32,7 @@ XUpscaleNode встраивается прозрачно: приложение �
 
 ```mermaid
 flowchart LR
-    subgraph phone["AniLabX (Android, XRemote)"]
+    subgraph phone["AniLabX (Android, XRemoteClient)"]
         A[Приложение]
     end
     subgraph node["XUpscaleNode (ПК с GPU)"]
@@ -45,12 +45,13 @@ flowchart LR
     end
     F[(CDN с исходным видео)]
 
-    A -- "mDNS: видит два cast-таргета" --> B
-    A -- "PLAY_VIDEO (ссылка на оригинал)" --> B
-    B -- "переписанный PLAY_VIDEO\n(ссылка на локальный HLS)" --> E
-    C -- "качает и апскейлит" --> F
-    C --> D
-    E -- "забирает готовый HLS" --> D
+    B -. "mDNS-анонс: узел виден как cast-таргет" .-> A
+    E -. "mDNS-анонс: настоящий приёмник виден как cast-таргет" .-> A
+    A -- "1. PLAY_VIDEO (ссылка на оригинал)" --> B
+    C -- "2. качает исходник" --> F
+    C -- "3. пишет апскейленные сегменты" --> D
+    B -- "4. переписанный PLAY_VIDEO\n(ссылка на локальный HLS)" --> E
+    E -- "5. запрашивает плейлист/сегменты" --> D
 ```
 
 Узел не заменяет приёмник, а встаёт между приложением и ним:
