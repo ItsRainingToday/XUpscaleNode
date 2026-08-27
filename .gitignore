@@ -1,0 +1,20 @@
+# Build tooling / artifacts (build.bat recreates all of this)
+.venv/
+build/
+dist/
+_internal/
+*.spec
+__pycache__/
+*.pyc
+
+# Built app (rebuild via build.bat instead of committing binaries)
+XUpscaleNode.exe
+
+# Third-party binaries - download separately, see README
+tools/
+
+# Machine-specific / runtime state - keep config.example.yaml as the template
+config.yaml
+watched.json
+out/
+*.log

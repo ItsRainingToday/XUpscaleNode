@@ -1,0 +1,4 @@
+zeroconf>=0.132
+aiohttp>=3.9
+PyYAML>=6.0
+customtkinter>=5.2

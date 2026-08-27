@@ -1,0 +1,67 @@
+# Copy to config.yaml and adjust for your network.
+
+# Address and port of the REAL XRemotexServer.
+receiver_host: "192.168.88.235"
+receiver_port: 31337
+
+# This node's own TCP listener - what the phone connects to once it picks
+# this node as the cast target.
+listen_port: 31340
+
+# Local HTTP server that serves the upscaled HLS output to the real receiver.
+http_host: "0.0.0.0"
+http_port: 8095
+
+# Name shown in the AniLabX app's cast target list.
+cast_name: "XUpscale"
+cast_name_suffix: " [Upscale]"
+
+# Upscale mode:
+#   "auto"        - chosen automatically from the source's resolution
+#                   (below 1080p -> performance, 1080p and up -> fidelity).
+#   "performance" - Anime4K, aggressive restoration + sharpening.
+#   "fidelity"    - FSRCNNX, neutral upscale with no repainting.
+default_engine: "auto"
+
+ffmpeg_path: "ffmpeg"
+ffprobe_path: "ffprobe"
+
+# h264_nvenc/hevc_nvenc (NVIDIA) | h264_amf (AMD) | h264_qsv (Intel) | libx264 (CPU).
+gpu_encoder: "h264_nvenc"
+
+# Encode quality, QP-like 0-51 scale (lower = better picture / higher bitrate).
+encode_quality: 19
+
+# Hard ceiling on average bitrate (Mbps).
+max_bitrate_mbps: 30
+
+upscale_factor: 2
+# "performance" mode's shader (.glsl file path).
+performance_shader_path: "shaders/Anime4K-Ultra_DbH_Sharp.glsl"
+# "fidelity" mode's shader (.glsl file path).
+fidelity_shader_path: "shaders/FSRCNNX_x2_8-0-4-1.glsl"
+
+hls_segment_seconds: 4
+ready_segment_count: 2
+ready_timeout_seconds: 60
+output_dir: "./out"
+
+# Behavior when an episode is opened:
+#   false - resume from where playback last stopped (PLAY_DATA.POSITION).
+#   true  - always start from the beginning, ignoring the saved position.
+# Manual seeking during playback (SEEK_TO/SEEK_BY) is unaffected either way.
+force_start_from_zero: false
+
+# Start serving immediately when the GUI launches, instead of waiting for
+# the Start button.
+auto_start: false
+
+# Where the node persists its own "watched up to" tracking across sessions
+# and restarts.
+watched_store_path: "watched.json"
+
+relay_timeout_seconds: 5.0
+
+# IP of this machine (where the receiver fetches the HLS stream from).
+# Leave empty to auto-detect.
+node_ip: ""
