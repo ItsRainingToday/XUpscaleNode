@@ -1,4 +1,6 @@
-# XUpscaleNode
+<p align="center">
+  <img src="images/logo.png" alt="Logo">
+</p>
 
 AI-апскейл прокси-узел для кастинга **XRemoteClient → XRemoteServer**.
 
